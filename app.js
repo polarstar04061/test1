@@ -53,19 +53,9 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
-
-// Serve static files with proper caching
-app.use(
-  express.static(path.resolve(__dirname, "out"), {
-    maxAge: "1d",
-    etag: true,
-    lastModified: true,
-  })
-);
-
 app.use(express.json());
 
-// API routes
+// API routes (these should come first)
 app.use("/api/auth", authRoutes);
 app.use("/api/qrcode", qrcodeRoutes);
 app.use("/api/dashboard", verifyToken, dashboardRoutes);
@@ -75,16 +65,25 @@ app.get("/health", (req, res) => {
   res.status(200).json({ status: "OK", timestamp: new Date().toISOString() });
 });
 
+// Serve static files from the 'out' directory
+app.use(
+  express.static(path.resolve(__dirname, "out"), {
+    maxAge: "1d",
+    etag: true,
+    lastModified: true,
+  })
+);
+
 // Serve the main page
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "out", "index.html"));
 });
 
-// Catch-all route for Next.js client-side routing
-app.use((req, res, next) => {
-  // Skip if it's an API route
+// Catch-all route for Next.js client-side routing (this should come LAST)
+app.get("*", (req, res) => {
+  // Skip if it's an API route (shouldn't reach here, but just in case)
   if (req.path.startsWith("/api/")) {
-    return next();
+    return res.status(404).send("API route not found");
   }
 
   // For all other routes, serve the appropriate HTML file
@@ -107,6 +106,10 @@ app.use((err, req, res, next) => {
 
 // Use environment port or default to 5000
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+const HOST = process.env.HOST || "0.0.0.0"; // Listen on all interfaces
+
+app.listen(PORT, HOST, () => {
+  console.log(`Server is running on http://${HOST}:${PORT}`);
+  console.log(`Local access: http://localhost:${PORT}`);
+  console.log(`Network access: http://127.0.0.1:${PORT}`);
 });
