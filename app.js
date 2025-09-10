@@ -79,11 +79,11 @@ app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "out", "index.html"));
 });
 
-// Catch-all route for Next.js client-side routing (this should come LAST)
-app.get("*", (req, res) => {
-  // Skip if it's an API route (shouldn't reach here, but just in case)
+// Catch-all route for Next.js client-side routing
+app.use((req, res, next) => {
+  // Skip if it's an API route
   if (req.path.startsWith("/api/")) {
-    return res.status(404).send("API route not found");
+    return next();
   }
 
   // For all other routes, serve the appropriate HTML file
