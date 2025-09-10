@@ -66,11 +66,6 @@ app.use((req, res, next) => {
     return next();
   }
 
-  // Check if the request is for a static asset
-  if (req.path.startsWith("/_next/") || req.path.includes(".")) {
-    return res.status(404).send("Not found");
-  }
-
   // For all other routes, serve the appropriate HTML file
   const filePath = path.join(__dirname, "out", req.path, "index.html");
 
