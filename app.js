@@ -34,7 +34,7 @@ const corsOptions = {
       "http://127.0.0.1:5000",
       "http://localhost:3000",
       "http://127.0.0.1:3000",
-      "http://13.49.196.146:3000",
+      "http://13.49.196.146",
       "http://13.49.196.146:5000",
       // Add your production domain here
       process.env.FRONTEND_URL || "http://localhost:5000",
@@ -105,11 +105,8 @@ app.use((err, req, res, next) => {
   res.status(500).send("Something broke!");
 });
 
+// Use environment port or default to 5000
 const PORT = process.env.PORT || 5000;
-const HOST = process.env.HOST || "0.0.0.0"; // Listen on all interfaces
-
-app.listen(PORT, HOST, () => {
-  console.log(`Server is running on http://${HOST}:${PORT}`);
-  console.log(`Local access: http://localhost:${PORT}`);
-  console.log(`Network access: http://127.0.0.1:${PORT}`);
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
 });
