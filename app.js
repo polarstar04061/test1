@@ -11,7 +11,7 @@ dotenv.config();
 
 const {
   verifyToken,
-  verifyQRCodePageToken,
+  verifyQRCodePageToken
 } = require("./middlewares/authMiddleware");
 
 // api routes
@@ -29,16 +29,7 @@ const corsOptions = {
     if (!origin) return callback(null, true);
 
     // Define allowed origins
-    const allowedOrigins = [
-      "http://localhost:5000",
-      "http://127.0.0.1:5000",
-      "http://localhost:30000",
-      "http://127.0.0.1:3000",
-      "http://13.49.196.146",
-      "http://13.49.196.146:5000",
-      // Add your production domain here
-      process.env.FRONTEND_URL || "http://localhost:5000",
-    ];
+    const allowedOrigins = ["https://deinetierfamilie.com"];
 
     if (allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true);
@@ -49,7 +40,7 @@ const corsOptions = {
   credentials: true,
   exposedHeaders: ["set-cookie"],
   allowedHeaders: ["Content-Type", "Authorization"],
-  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]
 };
 
 app.use(cors(corsOptions));
@@ -70,7 +61,7 @@ app.use(
   express.static(path.resolve(__dirname, "out"), {
     maxAge: "1d",
     etag: true,
-    lastModified: true,
+    lastModified: true
   })
 );
 
@@ -107,6 +98,6 @@ app.use((err, req, res, next) => {
 // Use environment port or default to 5000
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => {
+app.listen(PORT, "0.0.0.0", () => {
   console.log(`Server is running on http://${PORT}`);
 });

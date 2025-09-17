@@ -17,34 +17,24 @@ const verifyToken = async (req, res, next) => {
 };
 
 const verifyQRCodePageToken = async (req, res, next) => {
-  const auth_token = req.cookies.auth_token;
   const qr_page_token = req.cookies.qr_page_token;
 
-  if (auth_token) {
-    try {
-      const decoded = jwt.verify(auth_token, secret);
-      req.userId = decoded.id;
-      next();
-    } catch (error) {
-      console.log(error);
-      res.status(401).json({ message: "Token ist abgelaufen" });
-    }
-  } else {
-    if (!qr_page_token)
-      return res
-        .status(402)
-        .json({ message: "Bitte scannen Sie den QR-Code mit Ihrer Kamera." });
-    try {
-      const decoded = jwt.verify(qr_page_token, secret);
-      req.qrId = decoded.qrId;
-      next();
-    } catch (error) {
-      console.log(error);
-      res
-        .status(402)
-        .json({ message: "Bitte scannen Sie den QR-Code mit Ihrer Kamera." });
-    }
+  if (!qr_page_token)
+    return res.status(402).json({
+      message: "Bitte scannen Sie den QR-Code mit Ihrer Kamera.",
+      error: qr_page_token || ""
+    });
+  try {
+    const decoded = jwt.verify(qr_page_token, secret);
+    req.qrId = decoded.qrId;
+    next();
+  } catch (error) {
+    console.log(error);
+    res
+      .status(402)
+      .json({ message: "Bitte scannen Sie den QR-Code mit Ihrer Kamera." });
   }
+  // }
 };
 
 module.exports = { verifyToken, verifyQRCodePageToken };
