@@ -6,7 +6,7 @@ const { v4: uuidv4 } = require("uuid");
 const {
   S3Client,
   PutObjectCommand,
-  ListObjectsV2Command,
+  ListObjectsV2Command
 } = require("@aws-sdk/client-s3");
 const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
 
@@ -14,7 +14,7 @@ const {
   generate6DigitPassword,
   convertPassword,
   buildSearchIndex,
-  filterRecords,
+  filterRecords
 } = require("../helper/utils");
 const { search } = require("../routes/profile");
 
@@ -24,8 +24,8 @@ const s3 = new S3Client({
   region: process.env.AWS_REGION,
   credentials: {
     accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-  },
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
+  }
 });
 
 async function getUserDataByPage(req, res) {
@@ -35,7 +35,7 @@ async function getUserDataByPage(req, res) {
       endIndex,
       field = "name",
       sort = "asc",
-      searchText,
+      searchText
     } = req.query;
 
     const payload = req.query;
@@ -45,7 +45,7 @@ async function getUserDataByPage(req, res) {
       return res.status(400).json({
         success: false,
         error: "startIndex und endIndex sind erforderlich",
-        message: "startIndex und endIndex sind erforderlich",
+        message: "startIndex und endIndex sind erforderlich"
       });
     }
 
@@ -68,11 +68,7 @@ async function getUserDataByPage(req, res) {
 
     // Get total count (need separate unfiltered count query)
     const countQuery = searchText
-      ? db
-          .collection("qrCodes")
-          .orderBy("searchIndex")
-          .startAt(String(searchText).toLowerCase())
-          .endAt(String(searchText).toLowerCase() + "\uf8ff")
+      ? db.collection("qrCodes").where("userId", "==", payload?.userId)
       : db.collection("qrCodes");
 
     const totalCountPromise = countQuery.count().get();
@@ -90,7 +86,7 @@ async function getUserDataByPage(req, res) {
     const [totalCountSnap, status0Snap, status1Snap] = await Promise.all([
       totalCountPromise,
       status0Promise,
-      status1Promise,
+      status1Promise
     ]);
 
     const totalCount = totalCountSnap.data().count;
@@ -131,14 +127,14 @@ async function getUserDataByPage(req, res) {
             id: doc.id,
             ...data,
             profile: profileDoc.data(),
-            profileId: profileDoc.id,
+            profileId: profileDoc.id
           });
         } else {
           results.push({
             id: doc.id,
             ...data,
             profile: null,
-            note: "Profile not found",
+            note: "Profile not found"
           });
         }
       } else {
@@ -147,7 +143,7 @@ async function getUserDataByPage(req, res) {
           id: doc.id,
           ...data,
           profile: null,
-          note: "No userId provided",
+          note: "No userId provided"
         });
       }
     }
@@ -157,10 +153,10 @@ async function getUserDataByPage(req, res) {
     return res.status(200).json({
       success: true,
       userData: filterData,
-      total: totalCount,
+      total: (filterData || []).length,
       inactiveCount: status0Count,
       activeCount: status1Count,
-      message: "Daten erfolgreich abgerufen",
+      message: "Daten erfolgreich abgerufen"
     });
   } catch (error) {
     console.error("Firestore Error:", error);
@@ -169,7 +165,7 @@ async function getUserDataByPage(req, res) {
       message: "Suche fehlgeschlagen",
       error: error.message,
       solution:
-        "Stellen Sie sicher, dass alle Dokumente ein Feld „name_lowercase” enthalten und dass dieses Feld indiziert ist.",
+        "Stellen Sie sicher, dass alle Dokumente ein Feld „name_lowercase” enthalten und dass dieses Feld indiziert ist."
     });
   }
 }
@@ -183,24 +179,24 @@ async function resetQRPassword(req, res) {
   try {
     const docRef = await db.collection("qrCodes").doc(qrId).set(
       {
-        password: password,
+        password: password
       },
       {
-        merge: true,
+        merge: true
       }
     );
 
     return res.status(200).json({
       success: true,
       newQRPassword: password,
-      message: "Das QR-Code-Passwort wurde zurückgesetzt.",
+      message: "Das QR-Code-Passwort wurde zurückgesetzt."
     });
   } catch (error) {
     console.error("Error update QR code data:", error);
     return res.status(500).json({
       success: false,
       message: "Das Zurücksetzen des QR-Code-Passworts ist fehlgeschlagen",
-      error: error.message,
+      error: error.message
     });
   }
 }
@@ -213,7 +209,7 @@ async function generateQRCodesByCount(req, res) {
     return res.status(400).json({
       success: false,
       message: "qrCodeCount muss eine positive Zahl sein",
-      error: "qrCodeCount muss eine positive Zahl sein",
+      error: "qrCodeCount muss eine positive Zahl sein"
     });
   }
 
@@ -243,7 +239,7 @@ async function generateQRCodesByCount(req, res) {
             errorCorrectionLevel: "H",
             margin: 1,
             scale: 10,
-            type: "png",
+            type: "png"
           }
         );
 
@@ -279,7 +275,7 @@ async function generateQRCodesByCount(req, res) {
             Bucket: process.env.AWS_BUCKET_NAME,
             Key: key,
             Body: combinedImageBuffer,
-            ContentType: "image/png",
+            ContentType: "image/png"
           })
         );
 
@@ -296,17 +292,17 @@ async function generateQRCodesByCount(req, res) {
             searchIndex: buildSearchIndex({
               ...formData,
               qrId,
-              qrCodeImageUrl: fileUrl,
+              qrCodeImageUrl: fileUrl
             }),
             status: 0,
             createdAt: admin.firestore.FieldValue.serverTimestamp(),
-            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+            updatedAt: admin.firestore.FieldValue.serverTimestamp()
           });
 
         results.push({
           qrId,
           qrCodeImageUrl: fileUrl,
-          password: plainPassword,
+          password: plainPassword
         });
       } catch (err) {
         failed += 1;
@@ -350,14 +346,14 @@ async function generateQRCodesByCount(req, res) {
       message:
         failed === 0
           ? "QR-Codes erfolgreich erstellt"
-          : `QR-Codes erstellt mit ${failed} Fehler(n)`,
+          : `QR-Codes erstellt mit ${failed} Fehler(n)`
     });
   } catch (error) {
     console.error("QR generation batch failed:", error);
     return res.status(500).json({
       success: false,
       message: "QR-Codes-Erstellung fehlgeschlagen",
-      error: error.message,
+      error: error.message
     });
   }
 }
@@ -371,7 +367,7 @@ async function downloadAllQRCodes(req, res) {
 
     const command = new ListObjectsV2Command({
       Bucket: process.env.AWS_BUCKET_NAME,
-      Prefix: "uploads/qr-codes/",
+      Prefix: "uploads/qr-codes/"
     });
     const response = await s3.send(command);
 
@@ -381,7 +377,7 @@ async function downloadAllQRCodes(req, res) {
         images: [],
         total: 0,
         message: "Keine Dateien im angegebenen Verzeichnis gefunden",
-        error: "Keine Dateien im angegebenen Verzeichnis gefunden",
+        error: "Keine Dateien im angegebenen Verzeichnis gefunden"
       });
     }
 
@@ -396,7 +392,7 @@ async function downloadAllQRCodes(req, res) {
         ".webp",
         ".svg",
         ".bmp",
-        ".tiff",
+        ".tiff"
       ];
       const isImage = imageExtensions.some((ext) =>
         item.Key.toLowerCase().endsWith(ext)
@@ -408,11 +404,11 @@ async function downloadAllQRCodes(req, res) {
       const { GetObjectCommand } = require("@aws-sdk/client-s3");
       const getObjectCommand = new GetObjectCommand({
         Bucket: process.env.AWS_BUCKET_NAME,
-        Key: item.Key,
+        Key: item.Key
       });
 
       const downloadUrl = await getSignedUrl(s3, getObjectCommand, {
-        expiresIn: 3600, // 1 hour
+        expiresIn: 3600 // 1 hour
       });
 
       const fileName = item.Key.split("/").pop();
@@ -424,7 +420,7 @@ async function downloadAllQRCodes(req, res) {
         size: item.Size,
         lastModified: item.LastModified,
         type: item.Key.split(".").pop().toLowerCase(),
-        identifier: fileName.replace(/\.[^/.]+$/, ""), // remove extension
+        identifier: fileName.replace(/\.[^/.]+$/, "") // remove extension
       };
     });
 
@@ -435,7 +431,7 @@ async function downloadAllQRCodes(req, res) {
       images: images,
       total: images.length,
       directory: "uploads/qr-codes/",
-      bucket: process.env.AWS_BUCKET_NAME,
+      bucket: process.env.AWS_BUCKET_NAME
     });
   } catch (error) {
     console.error("Error fetching images:", error);
@@ -447,5 +443,5 @@ module.exports = {
   getUserDataByPage,
   resetQRPassword,
   generateQRCodesByCount,
-  downloadAllQRCodes,
+  downloadAllQRCodes
 };
