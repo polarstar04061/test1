@@ -15,4 +15,10 @@ router.patch("/reset-password/:token", authController.resetPassword);
 
 router.delete("/logout", authController.logout);
 
+router.get("/verify-email", authController.verifyEmail);
+
+router.post("/verify-2fa-login", authController.verify2FALogin);
+
+router.post("/resend-2fa-code", authController.resend2FACode);
+
 module.exports = router;

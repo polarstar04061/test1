@@ -11,14 +11,14 @@ dotenv.config();
 
 const {
   verifyToken,
-  verifyQRCodePageToken
+  verifyQRCodePageToken,
 } = require("./middlewares/authMiddleware");
 
 // api routes
 const authRoutes = require("./routes/auth");
 const qrcodeRoutes = require("./routes/qrcode");
 const dashboardRoutes = require("./routes/dashboard");
-
+const profileRoutes = require("./routes/profile");
 const app = express();
 
 app.use(cookieParser());
@@ -29,7 +29,10 @@ const corsOptions = {
     if (!origin) return callback(null, true);
 
     // Define allowed origins
-    const allowedOrigins = ["https://deinetierfamilie.com"];
+    const allowedOrigins = [
+      "https://deinetierfamilie.com",
+      "http://localhost:3000",
+    ];
 
     if (allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true);
@@ -40,7 +43,7 @@ const corsOptions = {
   credentials: true,
   exposedHeaders: ["set-cookie"],
   allowedHeaders: ["Content-Type", "Authorization"],
-  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
 };
 
 app.use(cors(corsOptions));
@@ -50,6 +53,7 @@ app.use(express.json());
 app.use("/api/auth", authRoutes);
 app.use("/api/qrcode", qrcodeRoutes);
 app.use("/api/dashboard", verifyToken, dashboardRoutes);
+app.use("/api/profile", profileRoutes);
 
 // Health check endpoint
 app.get("/health", (req, res) => {
@@ -61,7 +65,7 @@ app.use(
   express.static(path.resolve(__dirname, "out"), {
     maxAge: "1d",
     etag: true,
-    lastModified: true
+    lastModified: true,
   })
 );
 
